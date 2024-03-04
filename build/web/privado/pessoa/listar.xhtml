@@ -1,0 +1,214 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+    <ui:composition template="/templates/template.xhtml">
+        <ui:define name="titulo">Listagem de Pessoas</ui:define>
+        <ui:define name="conteudo">
+            <h:form id="FormListagem" prependId="false">
+                <p:growl/>
+                <p:commandButton value="Novo" actionListener="#{controlepessoa.novo()}"
+                                 icon="ui-icon-plus" oncomplete="PF('dlg').show();"
+                                 update="FormEdicao" process="@this"/>
+                <h1 align="center">Listagem de Pessoas</h1>
+                <div align="center">
+                    <p:panelGrid columns="11">
+                        <p:outputLabel value="Ordem"/>
+                        <p:selectOneMenu value="#{controlepessoa.daoPessoa.ordem}">
+                            <f:selectItem itemLabel="ID" itemValue="id"/>
+                            <f:selectItem itemLabel="Nome" itemValue="nome"/>
+                            <f:selectItem itemLabel="Idade" itemValue="idade"/>
+                            <p:ajax update="listagem"/>
+                        </p:selectOneMenu>
+                        <p:outputLabel value="Filtrar:"/>
+                        <p:inputText value="#{controlepessoa.daoPessoa.filtro}" size="15">
+                            <p:ajax update="listagem" event="keyup"/>
+                        </p:inputText>
+                        <p:commandButton value="Filtrar" update="listagem" icon="ui-icon-search"/>
+                        <p:outputLabel value="Máximo"/>
+                        <p:inputNumber value="#{controlepessoa.daoPessoa.maximoObjetos}" decimalPlaces="0" decimalSeparator="" thousandSeparator=""/>
+                        <p:commandButton value="Primeiro" actionListener="#{controlepessoa.daoPessoa.primeiro()}"
+                                         icon="ui-icon-seek-first" update="listagem"/>
+                        <p:commandButton value="Anterior" actionListener="#{controlepessoa.daoPessoa.anterior()}"
+                                         icon="ui-icon-seek-prev" update="listagem"/>
+                        <p:commandButton value="Proximo" actionListener="#{controlepessoa.daoPessoa.proximo()}"
+                                         icon="ui-icon-seek-next" update="listagem"/>
+                        <p:commandButton value="Ultimo" actionListener="#{controlepessoa.daoPessoa.ultimo()}"
+                                         icon="ui-icon-seek-end" update="listagem"/>
+                    </p:panelGrid>
+                </div>
+                <p:dataTable value="#{controlepessoa.daoPessoa.listaObjetos}" var="obj" id="listagem">
+                    <f:facet name="footer">
+                        <p:outputLabel value="#{controlepessoa.daoPessoa.mensagem}"/>
+                    </f:facet>
+                    <p:column headerText="ID">
+                        <p:outputLabel value="#{obj.id}"/>
+                    </p:column>
+
+                    <p:column headerText="NOME">
+                        <p:outputLabel value="#{obj.nome}"/>
+                    </p:column>
+
+                    <p:column headerText="IDADE">
+                        <p:outputLabel value="#{obj.idade}">
+                            <f:converter converterId="converterCalendar"/>
+                        </p:outputLabel>
+                    </p:column>
+                    <p:column headerText="SEXO">
+                        <p:outputLabel value="#{obj.sexo}"/>
+                    </p:column>
+
+                    <p:column headerText="Ações">
+                        <div align="center">
+                            <p:commandButton actionListener="#{controlepessoa.editar(obj.id)}" 
+                                             icon="ui-icon-pencil" title="Editar" 
+                                             oncomplete="PF('dlg').show();"  update="FormEdicao" process="@this"/>
+                            
+                            <p:commandButton actionListener="#{controlepessoa.remover(obj.id)}" 
+                                             icon="ui-icon-trash" title="Remover"
+                                             update="@form" process="@this"
+                                             onclick="if (!confirm('Confirma a exclusão?'))
+                                                         return false"/>
+                        </div>
+                    </p:column>
+
+                </p:dataTable>
+            </h:form>
+        </ui:define>
+
+        <ui:define name="dialogos">
+            <p:dialog widgetVar="dlg" header="Edição Pessoa" modal="true" resizable="false" width="60%" height="380">
+                <h:form id="FormEdicao" prependId="false">
+                    <p:growl id="growl"/>
+                    <p:tabView id="tab" prependId="false">
+                        <p:tab title="Dados Pessoa">
+                            <div align="center">
+                                <p:panelGrid columns="2" >
+
+                                    <p:outputLabel value="ID"/>
+                                    <p:inputText value="#{controlepessoa.pessoa.id}" readonly="true" size="5"/>
+                                    
+                                    <p:outputLabel value="Nome" for="txtNome"/>
+                                    <p:inputText id="txtNome" value="#{controlepessoa.pessoa.nome}" size="150" maxlength="150"
+                                                 placeholder="obrigatorio" />
+
+                                    <p:outputLabel value="Sexo" for="txtSexo"/>
+                                    <p:inputText id="txtSexo" value="#{controlepessoa.pessoa.sexo}" size="2" maxlength="2"
+                                                 placeholder="obrigatorio" />
+
+                                    <p:outputLabel value="Idade" for="txtIdade"/>
+                                    <p:calendar id="txtIdade" mask="true" pattern="dd/MM/yyyy" navigator="true" value="#{controlepessoa.pessoa.idade}" size="10" maxlength="10">
+                                        <f:converter converterId="converterCalendar"/>
+                                    </p:calendar>
+                                </p:panelGrid>
+                            </div>
+                        </p:tab>
+                        <p:tab title="Endereços">
+                            <h1 align="center">Listagem Endereços da Pessoa</h1>
+                            <p:dataTable value="#{controlepessoa.pessoa.endereços}" var="end"
+                                         rowIndexVar="idx" id="listaEnderecos">
+                                <f:facet name="header">
+                                    <p:commandButton value="Novo Endereço"
+                                                     actionListener="#{controlepessoa.novoEndereco()}"
+                                                     update="formEndereco" process="@this" icon="ui-icon-plus"
+                                                     oncomplete="PF('dlgEndereco').show();"/>
+                                </f:facet>
+                                <p:column headerText="Estado">
+                                    <p:outputLabel value="#{end.estado}"/>
+                                </p:column>
+                                <p:column headerText="Logradouro">
+                                    <p:outputLabel value="#{end.logradouro}"/>
+                                </p:column>
+                                <p:column headerText="Numero">
+                                    <p:outputLabel value="#{end.numero}"/>
+                                </p:column>
+                                <p:column headerText="Cep">
+                                    <p:outputLabel value="#{end.cep}"/>
+                                </p:column>
+                                <p:column headerText="Cidade">
+                                    <p:outputLabel value="#{end.cidade}"/>
+                                </p:column>
+                                <p:column headerText="Ações">
+                                    <div align="center">
+                                        <p:commandButton icon="ui-icon-pencil"
+                                                         actionListener="#{controlepessoa.alterarEndereco(idx)}"
+                                                         update="formEndereco" process="@this"
+                                                         oncomplete="PF('dlgEndereco').show();"/>
+                                        <p:commandButton icon="ui-icon-trash"
+                                                         actionListener="#{controlepessoa.removerEndereco(idx)}"
+                                                         update="listaEnderecos growl" process="@this"
+                                                         onclick="if (!confirm('Confirma a exclusão do endereço?'))
+                                                                     return false"/>
+                                    </div>
+                                </p:column>
+                            </p:dataTable>
+                        </p:tab>
+                    </p:tabView>
+                    
+                    <p:panel>
+                        <div align="center">
+                            <p:commandButton value="Salvar"
+                                             icon="ui-icon-disk"
+                                             actionListener="#{controlepessoa.salvar()}"
+                                             oncomplete="if(!args.validationFailed){PF('dlg').hide();}"
+                                             update="FormEdicao FormListagem"
+                                             />   
+                        </div>
+                    </p:panel>
+
+                    <ui:include src="/templates/ajaxstatus.xhtml"/>
+                </h:form>
+            </p:dialog>
+
+
+            <p:dialog widgetVar="dlgEndereco" header="Edição de Endereços" resizable="false"
+                      modal="true">
+                <h:form id="formEndereco" prependId="false">
+                    <p:growl/>
+                    <p:panelGrid columns="2">
+                        <f:facet name="footer">
+                            <div align="center">
+                                <p:commandButton value="Salvar" icon="ui-icon-disk"
+                                                 actionListener="#{controlepessoa.salvarEndereco()}"
+                                                 update="listaEnderecos formEndereco"
+                                                 process="@form"
+                                                 oncomplete="if(!args.validationFailed){PF('dlgEndereco').hide();}"/>
+                            </div>
+                        </f:facet>
+                        <p:outputLabel value="Estado" for="txtEstado"/>
+                        <p:inputText value="#{controlepessoa.endereco.estado}"
+                                     id="txtEstado" size="2" maxlength="2"
+                                     placeholder="obrigatório"/>
+                        
+                        <p:outputLabel value="Logradouro" for="txtLogradouro"/>
+                        <p:inputText value="#{controlepessoa.endereco.logradouro}"
+                                     id="txtLogradouro" size="100" maxlength="100"
+                                     placeholder="obrigatório"/>
+                        
+                        <p:outputLabel value="Numero" for="txtNumero"/>
+                        <p:inputText value="#{controlepessoa.endereco.numero}"
+                                     id="txtNumero" size="10" maxlength="10"
+                                     placeholder="obrigatório"/>
+                       
+                        
+                        <p:outputLabel value="CEP" for="txtCEP"/>
+                        <p:inputMask value="#{controlepessoa.endereco.cep}"
+                                     id="txtCEP" mask="99999999" size="8" maxlength="8"
+                                     placeholder="obrigatório"/>
+                        
+                        <p:outputLabel value="Cidade" for="txtCidade"/>
+                        <p:inputText value="#{controlepessoa.endereco.cidade}"
+                                     id="txtCidade" size="100" maxlength="100"
+                                     placeholder="obrigatório"/>
+                     
+                    </p:panelGrid>
+                </h:form>
+            </p:dialog>
+
+        </ui:define>
+    </ui:composition>
+</html>
+
